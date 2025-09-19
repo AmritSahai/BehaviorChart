@@ -1,32 +1,44 @@
 'use client'
 
-import { supabase } from '@/lib/supabase'
-import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const { signIn, isAuthenticated, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, authLoading, router])
 
   async function signInWithGoogle() {
     try {
       setLoading(true)
       setError(null)
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      })
-
-      if (error) {
-        setError(error.message)
-      } else {
-        console.log('OAuth data:', data)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
+      await signIn()
+      // The auth context will handle the redirect
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
       console.error('Sign in error:', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading if checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (

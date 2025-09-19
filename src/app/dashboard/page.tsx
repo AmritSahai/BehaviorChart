@@ -87,8 +87,11 @@ export default function DashboardPage() {
                       >
                         View Profile
                       </button>
-                      <button className="w-full bg-yellow-600 text-white px-3 py-2 rounded text-sm hover:bg-yellow-700">
-                        Add Behavior
+                      <button 
+                        onClick={() => router.push('/boards')}
+                        className="w-full bg-yellow-600 text-white px-3 py-2 rounded text-sm hover:bg-yellow-700"
+                      >
+                        View Boards
                       </button>
                     </div>
                   </div>

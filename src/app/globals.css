@@ -5,13 +5,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -54,22 +47,21 @@ body {
 
 @keyframes colorWheel {
   0% { filter: hue-rotate(0deg); }      /* Red */
-  6.25% { filter: hue-rotate(22.5deg); } /* Orange */
-  12.5% { filter: hue-rotate(45deg); }   /* Yellow */
-  18.75% { filter: hue-rotate(67.5deg); } /* Light green */
-  25% { filter: hue-rotate(90deg); }     /* Lime green */
-  31.25% { filter: hue-rotate(112.5deg); } /* Teal green */
-  37.5% { filter: hue-rotate(135deg); }  /* Aqua blue */
-  43.75% { filter: hue-rotate(157.5deg); } /* Light blue */
-  50% { filter: hue-rotate(180deg); }    /* Bright blue */
-  56.25% { filter: hue-rotate(202.5deg); } /* Dark blue/Indigo */
-  62.5% { filter: hue-rotate(225deg); }  /* Violet/Purple */
-  68.75% { filter: hue-rotate(247.5deg); } /* Magenta */
-  75% { filter: hue-rotate(270deg); }    /* Hot pink */
-  81.25% { filter: hue-rotate(292.5deg); } /* Deep pink */
-  87.5% { filter: hue-rotate(315deg); }  /* Raspberry pink */
-  93.75% { filter: hue-rotate(337.5deg); } /* Darker red/Maroon */
-  100% { filter: hue-rotate(360deg); }   /* Back to Red */
+  6.67% { filter: hue-rotate(24deg); }  /* Skip orange, go to yellow */
+  13.33% { filter: hue-rotate(48deg); } /* Yellow */
+  20% { filter: hue-rotate(72deg); }    /* Lime green */
+  26.67% { filter: hue-rotate(96deg); } /* Teal green */
+  33.33% { filter: hue-rotate(120deg); } /* Aqua blue */
+  40% { filter: hue-rotate(144deg); }   /* Light blue */
+  46.67% { filter: hue-rotate(168deg); } /* Bright blue */
+  53.33% { filter: hue-rotate(192deg); } /* Dark blue/Indigo */
+  60% { filter: hue-rotate(216deg); }   /* Violet/Purple */
+  66.67% { filter: hue-rotate(240deg); } /* Magenta */
+  73.33% { filter: hue-rotate(264deg); } /* Hot pink */
+  80% { filter: hue-rotate(288deg); }   /* Deep pink */
+  86.67% { filter: hue-rotate(312deg); } /* Raspberry pink */
+  93.33% { filter: hue-rotate(336deg); } /* Darker red/Maroon */
+  100% { filter: hue-rotate(360deg); }  /* Back to Red */
 }
 
 @keyframes colorWheelSlow {

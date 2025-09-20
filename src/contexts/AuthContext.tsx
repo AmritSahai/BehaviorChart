@@ -26,13 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
-      
-      // Store token in localStorage if session exists
-      if (session?.access_token) {
-        localStorage.setItem('auth_token', session.access_token)
-        localStorage.setItem('user_data', JSON.stringify(session.user))
-      }
-      
       setLoading(false)
     }
 
@@ -40,18 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
-        
-        if (session?.access_token) {
-          localStorage.setItem('auth_token', session.access_token)
-          localStorage.setItem('user_data', JSON.stringify(session.user))
-        } else {
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('user_data')
-        }
-        
         setLoading(false)
       }
     )
@@ -77,10 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Sign out error:', error)
       throw error
     }
-    
-    // Clear localStorage
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_data')
   }
 
   const value = {

@@ -101,7 +101,7 @@ export default function DashboardPage() {
                   <h3 className="text-md font-medium text-gray-900 mb-2">Security Info</h3>
                   <p className="text-sm text-gray-600">
                     This page is protected by authentication. Only logged-in users can access this content.
-                    Your authentication token is stored securely in localStorage.
+                    Your authentication is handled by secure, HTTP-only cookies.
                   </p>
                 </div>
               </div>

@@ -15,11 +15,7 @@ export default function ProtectedRoute({ children, fallback }: ProtectedRoutePro
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // Check localStorage as backup
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        router.push('/login')
-      }
+      router.push('/login')
     }
   }, [isAuthenticated, loading, router])
 

@@ -5,10 +5,47 @@ import Link from "next/link";
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
   const router = useRouter();
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      // Check if we have OAuth tokens in the URL hash
+      if (window.location.hash.includes('access_token')) {
+        try {
+          // Parse the hash to extract the access token
+          const hash = window.location.hash.substring(1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          
+          if (accessToken) {
+            // Set the session manually
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || ''
+            });
+            
+            if (error) {
+              console.error('OAuth callback error:', error);
+            } else {
+              console.log('OAuth callback successful, session set');
+              // Clear the hash from URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing OAuth callback:', error);
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, []);
 
   // Redirect to dashboard if authenticated
   useEffect(() => {

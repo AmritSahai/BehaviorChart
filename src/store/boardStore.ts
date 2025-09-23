@@ -15,6 +15,7 @@ interface BoardStore {
   activeUsers: string[]
   sessionId: string | null
   isConnected: boolean
+  subscription: any | null
   setPins: (pins: Pin[]) => void
   addPin: (pin: Pin) => void
   updatePin: (id: string, updates: Partial<Pin>) => void

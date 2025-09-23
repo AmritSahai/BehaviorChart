@@ -150,9 +150,9 @@ const Board = ({ sessionId, categories }: BoardProps) => {
           </div>
         ))}
 
-        {/* Pins */}
+        {/* Pins with floating animation */}
         <AnimatePresence>
-          {pins.map((pin) => (
+          {pins.map((pin, index) => (
             <motion.div
               key={pin.id}
               className={`absolute w-12 h-12 bg-yellow-400 rounded-full border-2 border-yellow-600 cursor-grab select-none flex items-center justify-center font-bold text-xs text-black ${
@@ -168,9 +168,20 @@ const Board = ({ sessionId, categories }: BoardProps) => {
               onDragStart={() => setDraggedPin(pin.id)}
               onDragEnd={(event, info) => handleDragEnd(pin.id, event as DragEvent)}
               whileDrag={{ scale: 1.1, zIndex: 50 }}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ 
+                scale: 1, 
+                y: [0, -10, 0, 10, 0],
+                x: [0, 5, 0, -5, 0],
+                rotate: [0, 5, 0, -5, 0]
+              }}
+              transition={{
+                duration: 8 + (index * 0.5), // Vary duration based on index
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: index * 0.2 // Stagger the animations
+              }}
+              exit={{ scale: 0, rotate: 180 }}
               title={pin.person_name}
             >
               {pin.person_name.slice(0, 2).toUpperCase()}

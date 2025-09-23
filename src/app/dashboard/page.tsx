@@ -26,11 +26,39 @@ export default function DashboardPage() {
         
         {/* Pool-themed background elements with color animation */}
         <div className="absolute inset-0 overflow-hidden animate-color-wheel-slow">
-          {/* Water ripple effects - Pool theme */}
-          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute top-32 right-20 w-24 h-24 bg-cyan-200 rounded-full opacity-30 animate-pulse delay-1000"></div>
-          <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-teal-200 rounded-full opacity-25 animate-pulse delay-2000"></div>
-          <div className="absolute bottom-32 right-1/3 w-28 h-28 bg-blue-300 rounded-full opacity-20 animate-pulse delay-3000"></div>
+          {/* Water ripple effects - Pool theme with movement */}
+          <div 
+            className="absolute w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-pulse"
+            style={{
+              animation: 'pulse 3s ease-in-out infinite, floatAround 15s ease-in-out infinite',
+              top: '10px',
+              left: '10px'
+            }}
+          ></div>
+          <div 
+            className="absolute w-24 h-24 bg-cyan-200 rounded-full opacity-30 animate-pulse delay-1000"
+            style={{
+              animation: 'pulse 3s ease-in-out infinite 1s, floatAround 18s ease-in-out infinite 2s',
+              top: '32px',
+              right: '20px'
+            }}
+          ></div>
+          <div 
+            className="absolute w-40 h-40 bg-teal-200 rounded-full opacity-25 animate-pulse delay-2000"
+            style={{
+              animation: 'pulse 3s ease-in-out infinite 2s, floatAround 20s ease-in-out infinite 4s',
+              bottom: '20px',
+              left: '25%'
+            }}
+          ></div>
+          <div 
+            className="absolute w-28 h-28 bg-blue-300 rounded-full opacity-20 animate-pulse delay-3000"
+            style={{
+              animation: 'pulse 3s ease-in-out infinite 3s, floatAround 16s ease-in-out infinite 6s',
+              bottom: '32px',
+              right: '33%'
+            }}
+          ></div>
           
           {/* Pool tiles pattern */}
           <div className="absolute inset-0 opacity-5">
@@ -44,11 +72,39 @@ export default function DashboardPage() {
 
         {/* Mystical animated background elements - Overlapping layer */}
         <div className="absolute inset-0 overflow-hidden animate-color-wheel">
-          {/* Floating orbs with water colors */}
-          <div className="absolute top-20 left-20 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob"></div>
-          <div className="absolute top-40 right-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/4 w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-4000"></div>
-          <div className="absolute bottom-20 right-1/3 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-6000"></div>
+          {/* Floating orbs with enhanced water colors and dramatic movement */}
+          <div 
+            className="absolute w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-15"
+            style={{
+              animation: 'blob 7s infinite, floatOrbs 35s ease-in-out infinite',
+              top: '20px',
+              left: '20px'
+            }}
+          ></div>
+          <div 
+            className="absolute w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-15"
+            style={{
+              animation: 'blob 7s infinite 2s, floatOrbs 40s ease-in-out infinite 8s',
+              top: '40px',
+              right: '20px'
+            }}
+          ></div>
+          <div 
+            className="absolute w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-15"
+            style={{
+              animation: 'blob 7s infinite 4s, floatOrbs 45s ease-in-out infinite 16s',
+              bottom: '-8px',
+              left: '25%'
+            }}
+          ></div>
+          <div 
+            className="absolute w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-15"
+            style={{
+              animation: 'blob 7s infinite 6s, floatOrbs 38s ease-in-out infinite 24s',
+              bottom: '20px',
+              right: '33%'
+            }}
+          ></div>
           
           {/* Water-themed grid pattern */}
           <div className="absolute inset-0 opacity-8">
@@ -59,7 +115,7 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          {/* Floating water particles */}
+          {/* Floating water particles with enhanced movement */}
           <div className="absolute inset-0">
             {Array.from({ length: 50 }).map((_, i) => (
               <div
@@ -69,7 +125,8 @@ export default function DashboardPage() {
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 10}s`,
-                  animationDuration: `${10 + Math.random() * 20}s`
+                  animationDuration: `${10 + Math.random() * 20}s`,
+                  animation: `float ${10 + Math.random() * 20}s linear infinite ${Math.random() * 10}s, floatAround ${15 + Math.random() * 15}s ease-in-out infinite ${Math.random() * 20}s`
                 }}
               ></div>
             ))}

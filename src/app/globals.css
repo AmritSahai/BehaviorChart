@@ -45,6 +45,45 @@ body {
   }
 }
 
+@keyframes floatAround {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -30px) rotate(90deg);
+  }
+  50% {
+    transform: translate(-10px, -60px) rotate(180deg);
+  }
+  75% {
+    transform: translate(-30px, -20px) rotate(270deg);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(360deg);
+  }
+}
+
+@keyframes floatOrbs {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  20% {
+    transform: translate(50px, -80px) scale(1.1) rotate(72deg);
+  }
+  40% {
+    transform: translate(-30px, -120px) scale(0.9) rotate(144deg);
+  }
+  60% {
+    transform: translate(-80px, -40px) scale(1.2) rotate(216deg);
+  }
+  80% {
+    transform: translate(-20px, 20px) scale(0.8) rotate(288deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1) rotate(360deg);
+  }
+}
+
 @keyframes colorWheel {
   0% { filter: hue-rotate(0deg); }      /* Red */
   6.67% { filter: hue-rotate(24deg); }  /* Skip orange, go to yellow */

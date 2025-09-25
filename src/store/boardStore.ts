@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase'
 interface Pin {
   id: string
   person_name: string
-  category_index: number
-  x_position: number
-  y_position: number
+  board_x_percentage: number
+  board_y_percentage: number
+
   placed_by: string
+  state?: 'saving' | 'error'
 }
 
 interface BoardStore {
@@ -16,6 +17,8 @@ interface BoardStore {
   sessionId: string | null
   isConnected: boolean
   subscription: any | null
+  updatingPins: Set<string> // Track pins being updated by current user
+  draggingPins: Set<string> // Track pins currently being dragged
   setPins: (pins: Pin[]) => void
   addPin: (pin: Pin) => void
   updatePin: (id: string, updates: Partial<Pin>) => void
@@ -24,6 +27,10 @@ interface BoardStore {
   setSessionId: (id: string) => void
   subscribeToSession: (sessionId: string) => void
   unsubscribe: () => void
+  markPinAsUpdating: (id: string) => void
+  markPinAsUpdated: (id: string) => void
+  markPinAsDragging: (id: string) => void
+  markPinAsNotDragging: (id: string) => void
 }
 
 export const useBoardStore = create<BoardStore>((set, get) => ({
@@ -32,14 +39,19 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   sessionId: null,
   isConnected: false,
   subscription: null,
+  updatingPins: new Set<string>(),
+  draggingPins: new Set<string>(),
 
   setPins: (pins) => set({ pins }),
   
   addPin: (pin) => set((state) => ({ pins: [...state.pins, pin] })),
   
-  updatePin: (id, updates) => set((state) => ({
-    pins: state.pins.map(pin => pin.id === id ? { ...pin, ...updates } : pin)
-  })),
+  updatePin: (id, updates) => {
+    console.log('📌 updatePin called:', { id, updates });
+    set((state) => ({
+      pins: state.pins.map(pin => pin.id === id ? { ...pin, ...updates } : pin)
+    }));
+  },
   
   removePin: (id) => set((state) => ({
     pins: state.pins.filter(pin => pin.id !== id)
@@ -48,9 +60,36 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   setActiveUsers: (users) => set({ activeUsers: users }),
   setSessionId: (id) => set({ sessionId: id }),
 
+  markPinAsUpdating: (id: string) => set((state) => ({
+    updatingPins: new Set([...state.updatingPins, id])
+  })),
+
+  markPinAsUpdated: (id: string) => set((state) => {
+    const newUpdatingPins = new Set(state.updatingPins)
+    newUpdatingPins.delete(id)
+    return { updatingPins: newUpdatingPins }
+  }),
+
+  markPinAsDragging: (id: string) => set((state) => ({
+    draggingPins: new Set([...state.draggingPins, id])
+  })),
+
+  markPinAsNotDragging: (id: string) => set((state) => {
+    const newDraggingPins = new Set(state.draggingPins)
+    newDraggingPins.delete(id)
+    return { draggingPins: newDraggingPins }
+  }),
+
   subscribeToSession: (sessionId: string) => {
-    const channel = supabase.channel(`session-${sessionId}`)
-      .on('postgres_changes', {
+    const channel = supabase.channel(`session-${sessionId}`, {
+      config: {
+        broadcast: {
+          ack: true,
+        },
+      },
+    });
+    // Selective real-time updates: only update pins that are NOT being dragged
+    channel.on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'pin_placements',
@@ -61,6 +100,19 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         if (eventType === 'INSERT' && newRecord) {
           get().addPin(newRecord as Pin)
         } else if (eventType === 'UPDATE' && newRecord) {
+          // If this pin is currently being dragged locally, clear dragging and skip or accept authoritative value
+          if (get().draggingPins.has(newRecord.id)) {
+            console.log(`Clearing drag flag for pin ${newRecord.id} on real-time update`);
+            get().markPinAsNotDragging(newRecord.id);
+          }
+          console.log('🔄 Real-time update received:', {
+            pinId: newRecord.id,
+            newPosition: { 
+              x: newRecord.board_x_percentage, 
+              y: newRecord.board_y_percentage 
+            },
+            draggingPins: Array.from(get().draggingPins)
+          });
           get().updatePin(newRecord.id, newRecord as Pin)
         } else if (eventType === 'DELETE' && oldRecord) {
           get().removePin(oldRecord.id)

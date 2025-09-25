@@ -1,13 +1,13 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import type React from 'react'
+// Removed Framer Motion for custom pointer-based dragging
 import { useBoardStore } from '@/store/boardStore'
 import { supabase } from '@/lib/supabase'
 
 interface Category {
   name: string
   color: string
-  position: number
 }
 
 interface BoardProps {
@@ -15,91 +15,147 @@ interface BoardProps {
   categories: Category[]
 }
 
+type Pin = {
+  id: string;
+  person_name: string;
+  board_x_percentage: number;
+  board_y_percentage: number;
+  placed_by: string;
+  state?: 'saving' | 'error';
+};
+
 const Board = ({ sessionId, categories }: BoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null)
-  const [draggedPin, setDraggedPin] = useState<string | null>(null)
   const [newPersonName, setNewPersonName] = useState('')
-  
-  const {
-    pins,
-    activeUsers,
-    subscribeToSession,
-    unsubscribe,
-    isConnected
-  } = useBoardStore()
+
+  const pins = useBoardStore((state) => state.pins as Pin[])
+  const isConnected = useBoardStore((state) => state.isConnected)
+  const activeUsers = useBoardStore((state) => state.activeUsers)
+  const { subscribeToSession, unsubscribe, setPins, markPinAsDragging, markPinAsNotDragging } = useBoardStore.getState()
 
   useEffect(() => {
     subscribeToSession(sessionId)
+
+    const loadExistingPins = async () => {
+      const { data, error } = await supabase
+        .from('pin_placements')
+        .select('id, person_name, board_x_percentage, board_y_percentage, placed_by')
+        .eq('session_id', sessionId)
+      
+      if (error) {
+        console.error('Error fetching pins:', error)
+      } else if (data) {
+        setPins(data.map(p => ({ ...p, state: undefined })))
+      }
+    }
+    
     loadExistingPins()
     
     return () => unsubscribe()
-  }, [sessionId])
+  }, [sessionId, subscribeToSession, unsubscribe, setPins])
 
-  const loadExistingPins = async () => {
-    const { data, error } = await supabase
-      .from('pin_placements')
-      .select('*')
-      .eq('session_id', sessionId)
+  const addPin = useCallback(async () => {
+    const trimmedName = newPersonName.trim()
+    if (!trimmedName) return
     
-    if (data && !error) {
-      useBoardStore.getState().setPins(data)
-    }
-  }
-
-  const addPin = async () => {
-    if (!newPersonName.trim()) return
-    
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('pin_placements')
       .insert({
         session_id: sessionId,
-        person_name: newPersonName.trim(),
-        category_index: 0,
-        x_position: 50,
-        y_position: 50,
-        placed_by: 'user'
+        person_name: trimmedName,
+        board_x_percentage: 0.5, // Default to center
+        board_y_percentage: 0.5,
+        placed_by: 'user' // This should ideally be a real user ID
       })
-      .select()
-      .single()
-    
-    if (!error) {
+      
+    if (error) {
+      console.error('Error adding pin:', error)
+    } else {
       setNewPersonName('')
     }
-  }
+  }, [newPersonName, sessionId])
 
-  const updatePinPosition = async (pinId: string, categoryIndex: number, x: number, y: number) => {
-    await supabase
+  // Custom pointer-based drag state
+  const draggingPinIdRef = useRef<string | null>(null)
+
+  const handlePointerDown = useCallback((pinId: string, e: React.PointerEvent<HTMLDivElement>) => {
+    const board = boardRef.current
+    if (!board) return
+    draggingPinIdRef.current = pinId
+    ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
+    markPinAsDragging(pinId)
+  }, [markPinAsDragging])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const board = boardRef.current
+    if (!board) return
+    const pinId = draggingPinIdRef.current
+    if (!pinId) return
+    const boardRect = board.getBoundingClientRect()
+    // Use pointer position as the pin center
+    const centerX = e.clientX - boardRect.left
+    const centerY = e.clientY - boardRect.top
+    const xPct = Math.max(0.02, Math.min(0.98, centerX / boardRect.width))
+    const yPct = Math.max(0.02, Math.min(0.98, centerY / boardRect.height))
+    // Imperatively move the element without React state updates
+    const el = e.currentTarget as HTMLDivElement
+    el.style.left = `${xPct * 100}%`
+    el.style.top = `${yPct * 100}%`
+  }, [])
+
+  const handlePointerUp = useCallback(async (pinId: string, e: React.PointerEvent<HTMLDivElement>) => {
+    const board = boardRef.current
+    if (!board) return
+    // Cache the element before any await
+    const el = e.currentTarget as HTMLDivElement
+    const boardRect = board.getBoundingClientRect()
+    const centerX = e.clientX - boardRect.left
+    const centerY = e.clientY - boardRect.top
+    const clampedX = Math.max(0.02, Math.min(0.98, centerX / boardRect.width))
+    const clampedY = Math.max(0.02, Math.min(0.98, centerY / boardRect.height))
+    const newPinState = {
+      board_x_percentage: clampedX,
+      board_y_percentage: clampedY,
+    }
+    // Release pointer capture before awaiting to avoid stale target
+    if (el && el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+    // Persist once to DB; realtime will confirm
+    const { error } = await supabase
       .from('pin_placements')
-      .update({
-        category_index: categoryIndex,
-        x_position: x,
-        y_position: y,
-        updated_at: new Date().toISOString()
-      })
+      .update({ ...newPinState, updated_at: new Date().toISOString() })
       .eq('id', pinId)
-  }
+    if (error) {
+      console.error('Failed to save pin position:', error)
+      markPinAsNotDragging(pinId)
+    }
+    // Keep dragging flag until realtime UPDATE arrives; then store clears it
+    draggingPinIdRef.current = null
+  }, [markPinAsNotDragging])
 
-  const handleDragEnd = (pinId: string, event: MouseEvent | TouchEvent) => {
-    if (!boardRef.current) return
-    
-    const boardRect = boardRef.current.getBoundingClientRect()
-    const clientX = 'clientX' in event ? event.clientX : event.touches[0].clientX
-    const clientY = 'clientY' in event ? event.clientY : event.touches[0].clientY
-    
-    const x = ((clientX - boardRect.left) / boardRect.width) * 100
-    const y = ((clientY - boardRect.top) / boardRect.height) * 100
-    
-    // Determine which category based on y position
-    const categoryIndex = Math.floor((y / 100) * 4)
-    const clampedCategoryIndex = Math.max(0, Math.min(3, categoryIndex))
-    
-    updatePinPosition(pinId, clampedCategoryIndex, x, y)
-    setDraggedPin(null)
-  }
+  // Framer drag version removed
+  
+  const getCategoryIndexForPin = useCallback((pin: Pin) => {
+    const numCategories = categories.length;
+    const yPercentage = pin.board_y_percentage ?? 0;
+    return Math.min(Math.floor(yPercentage * numCategories), numCategories - 1);
+  }, [categories.length]);
+
+  const pinsByCategory = useMemo(() => {
+    const grouped: { [key: number]: Pin[] } = {};
+    for (const pin of pins) {
+      const categoryIndex = getCategoryIndexForPin(pin);
+      if (!grouped[categoryIndex]) {
+        grouped[categoryIndex] = [];
+      }
+      grouped[categoryIndex].push(pin);
+    }
+    return grouped;
+  }, [pins, getCategoryIndexForPin]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      {/* Connection Status */}
+    <div className="w-full p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -110,7 +166,6 @@ const Board = ({ sessionId, categories }: BoardProps) => {
         </div>
       </div>
 
-      {/* Add New Pin */}
       <div className="mb-6 flex gap-2">
         <input
           type="text"
@@ -128,58 +183,59 @@ const Board = ({ sessionId, categories }: BoardProps) => {
         </button>
       </div>
 
-      {/* Board */}
-      <div
-        ref={boardRef}
-        className="relative w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden"
-        style={{ aspectRatio: '4/3' }}
-      >
-        {/* Category Sections */}
+      {/* Container - completely fixed, never changes */}
+      <div className="w-full flex justify-center">
+        <div
+          ref={boardRef}
+          className="relative rounded-lg overflow-hidden"
+          style={{ 
+            width: '600px',
+            height: '500px',
+            border: '2px solid #D1D5DB',
+            // Removed position: fixed, top, left, transform to allow it to flow in the document after the add pin section
+            zIndex: 10
+          }}
+        >
         {categories.map((category, index) => (
           <div
-            key={index}
+            key={category.name}
             className="absolute inset-x-0 flex items-center justify-center text-white font-bold text-xl"
             style={{
               backgroundColor: category.color,
-              top: `${index * 25}%`,
-              height: '25%',
-              borderBottom: index < 3 ? '2px solid white' : 'none'
+              top: `${index * (100 / categories.length)}%`,
+              height: `${100 / categories.length}%`,
+              borderBottom: index < categories.length - 1 ? '2px solid white' : 'none'
             }}
           >
             {category.name}
           </div>
         ))}
 
-        {/* Pins */}
-        <AnimatePresence>
-          {pins.map((pin) => (
-            <motion.div
-              key={pin.id}
-              className={`absolute w-12 h-12 bg-yellow-400 rounded-full border-2 border-yellow-600 cursor-grab select-none flex items-center justify-center font-bold text-xs text-black ${
-                draggedPin === pin.id ? 'cursor-grabbing z-50' : 'z-10'
-              }`}
-              style={{
-                left: `${pin.x_position}%`,
-                top: `${pin.y_position}%`,
-                transform: 'translate(-50%, -50%)'
-              }}
-              drag
-              dragMomentum={false}
-              onDragStart={() => setDraggedPin(pin.id)}
-              onDragEnd={(event, info) => handleDragEnd(pin.id, event as any)}
-              whileDrag={{ scale: 1.1, zIndex: 50 }}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              title={pin.person_name}
-            >
-              {pin.person_name.slice(0, 2).toUpperCase()}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {pins.map((pin) => (
+          <div
+            key={pin.id}
+            onPointerDown={(e) => handlePointerDown(pin.id, e)}
+            onPointerMove={handlePointerMove}
+            onPointerUp={(e) => handlePointerUp(pin.id, e)}
+            className={`absolute w-12 h-12 bg-yellow-400 rounded-full border-2 select-none flex items-center justify-center font-bold text-xs text-black cursor-grab
+              ${pin.state === 'error' ? 'border-red-500' : 'border-yellow-600'}
+            `}
+            style={{
+              left: `${pin.board_x_percentage * 100}%`,
+              top: `${pin.board_y_percentage * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 10,
+              touchAction: 'none',
+              willChange: 'transform, left, top'
+            }}
+            title={pin.person_name}
+          >
+            {pin.person_name.slice(0, 2).toUpperCase()}
+          </div>
+        ))}
+        </div>
       </div>
 
-      {/* Pin List */}
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-2">Current Pins:</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -189,13 +245,11 @@ const Board = ({ sessionId, categories }: BoardProps) => {
                 {category.name}
               </h4>
               <ul className="text-sm space-y-1">
-                {pins
-                  .filter(pin => pin.category_index === index)
-                  .map(pin => (
-                    <li key={pin.id} className="text-gray-700">
-                      {pin.person_name}
-                    </li>
-                  ))}
+                {(pinsByCategory[index] || []).map(pin => (
+                  <li key={pin.id} className="text-gray-700">
+                    {pin.person_name}
+                  </li>
+                ))}
               </ul>
             </div>
           ))}

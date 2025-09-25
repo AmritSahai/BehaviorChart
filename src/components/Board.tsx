@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import type React from 'react'
-// Removed Framer Motion for custom pointer-based dragging
 import { useBoardStore } from '@/store/boardStore'
 import { supabase } from '@/lib/supabase'
 
@@ -25,13 +24,12 @@ type Pin = {
 };
 
 const Board = ({ sessionId, categories }: BoardProps) => {
-  console.log('Categories:', categories);  // Add this line to log categories
   const boardRef = useRef<HTMLDivElement>(null)
   const [newPersonName, setNewPersonName] = useState('')
 
   const pins = useBoardStore((state) => state.pins as Pin[])
-  const isConnected = useBoardStore((state) => state.isConnected)
-  const activeUsers = useBoardStore((state) => state.activeUsers)
+  // const isConnected = useBoardStore((state) => state.isConnected)
+  // const activeUsers = useBoardStore((state) => state.activeUsers)
   const { subscribeToSession, unsubscribe, setPins, markPinAsDragging, markPinAsNotDragging } = useBoardStore.getState()
 
   useEffect(() => {
@@ -157,7 +155,7 @@ const Board = ({ sessionId, categories }: BoardProps) => {
 
   return (
     <div className="w-full p-4">
-      <div className="mb-4 flex items-center justify-between">
+      {/* <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
           <span className="text-sm">{isConnected ? 'Connected' : 'Disconnected'}</span>
@@ -165,7 +163,7 @@ const Board = ({ sessionId, categories }: BoardProps) => {
         <div className="text-sm text-gray-600">
           {activeUsers.length} active users
         </div>
-      </div>
+      </div> */}
 
       <div className="mb-6 flex gap-2">
         <input
@@ -297,7 +295,7 @@ const Board = ({ sessionId, categories }: BoardProps) => {
               </h4>
               <ul className="text-sm space-y-1">
                 {(pinsByCategory[index] || []).map(pin => (
-                  <li key={pin.id} className="text-gray-700">
+                  <li key={pin.id} className="text-white">
                     {pin.person_name}
                   </li>
                 ))}

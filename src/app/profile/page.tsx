@@ -79,10 +79,10 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex space-x-3">
                     <button
-                      onClick={() => router.push('/dashboard')}
+                      onClick={() => router.push('/boards')}
                       className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
                     >
-                      Go to Dashboard
+                      Go to Boards
                     </button>
                     <button
                       onClick={handleSignOut}

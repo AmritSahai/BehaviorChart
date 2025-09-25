@@ -25,6 +25,7 @@ type Pin = {
 };
 
 const Board = ({ sessionId, categories }: BoardProps) => {
+  console.log('Categories:', categories);  // Add this line to log categories
   const boardRef = useRef<HTMLDivElement>(null)
   const [newPersonName, setNewPersonName] = useState('')
 
@@ -196,20 +197,70 @@ const Board = ({ sessionId, categories }: BoardProps) => {
             zIndex: 10
           }}
         >
-        {categories.map((category, index) => (
-          <div
-            key={category.name}
-            className="absolute inset-x-0 flex items-center justify-center text-white font-bold text-xl"
-            style={{
-              backgroundColor: category.color,
-              top: `${index * (100 / categories.length)}%`,
-              height: `${100 / categories.length}%`,
-              borderBottom: index < categories.length - 1 ? '2px solid white' : 'none'
-            }}
-          >
-            {category.name}
+        {/* Top Section - Blue Sky/Clouds */}
+        <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-blue-400 to-blue-300 flex items-center justify-center">
+          <div className="absolute inset-0">
+            {/* Clouds */}
+            <div className="absolute top-4 left-8 w-12 h-8 bg-white rounded-full opacity-80"></div>
+            <div className="absolute top-6 left-12 w-8 h-6 bg-white rounded-full opacity-80"></div>
+            <div className="absolute top-2 right-12 w-16 h-10 bg-white rounded-full opacity-80"></div>
+            <div className="absolute top-4 right-8 w-10 h-7 bg-white rounded-full opacity-80"></div>
+            <div className="absolute top-3 right-16 w-6 h-5 bg-white rounded-full opacity-80"></div>
           </div>
-        ))}
+          <h2 className="text-4xl font-bold text-blue-800 uppercase tracking-wider relative z-10" style={{ fontFamily: 'Comic Sans MS, cursive' }}>
+            {categories[0]?.name || 'GOOD BOYYY'}
+          </h2>
+        </div>
+
+        {/* Second Section - Green Grass */}
+        <div className="absolute inset-x-0 top-1/4 h-1/4 bg-gradient-to-b from-green-400 to-green-300 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <p className="text-black text-lg mb-2" style={{ fontFamily: 'Brush Script MT, cursive' }}>YK What...</p>
+            <h2 className="text-4xl font-bold text-black uppercase tracking-wider" style={{ fontFamily: 'Impact, Arial Black, sans-serif' }}>
+              {categories[1]?.name || 'HELL YEAH'}
+            </h2>
+          </div>
+          
+          {/* Sparkles */}
+          <div className="absolute top-6 right-6">
+            <div className="w-4 h-4 bg-yellow-300 transform rotate-45"></div>
+          </div>
+          <div className="absolute top-8 right-8">
+            <div className="w-3 h-3 bg-yellow-300 transform rotate-45"></div>
+          </div>
+        </div>
+
+        {/* Third Section - Peach/Pink */}
+        <div className="absolute inset-x-0 top-2/4 h-1/4 bg-gradient-to-b from-pink-300 to-pink-200 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-purple-600 uppercase tracking-wider" style={{ fontFamily: 'Chiller, fantasy' }}>
+              {categories[2]?.name || 'FUCKIN\''}
+            </h2>
+            <p className="text-purple-800 text-2xl italic" style={{ fontFamily: 'Papyrus, fantasy' }}>freak</p>
+          </div>
+          
+          {/* Devil emojis */}
+          <div className="absolute top-6 left-6">
+            <span className="text-4xl">😈</span>
+          </div>
+          <div className="absolute top-6 right-6">
+            <span className="text-4xl">👅</span>
+          </div>
+        </div>
+
+        {/* Bottom Section - Black with Fire */}
+        <div className="absolute inset-x-0 top-3/4 h-1/4 bg-gradient-to-t from-orange-500 via-red-600 to-black flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-orange-400 via-red-500 to-transparent opacity-60"></div>
+          <h2 className="text-4xl font-bold text-white uppercase tracking-wider relative z-10" style={{ fontFamily: 'Creepster, fantasy' }}>
+            {categories[3]?.name || 'IN THE FIRE'}
+          </h2>
+          
+          {/* Flame decorations on text */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="absolute -top-3 left-3 w-2 h-4 bg-orange-400 rounded-full transform rotate-12"></div>
+            <div className="absolute -top-2 right-3 w-1 h-3 bg-yellow-400 rounded-full transform -rotate-12"></div>
+          </div>
+        </div>
 
         {pins.map((pin) => (
           <div

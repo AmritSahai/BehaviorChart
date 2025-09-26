@@ -290,7 +290,9 @@ const Board = ({ sessionId, categories }: BoardProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {categories.map((category, index) => (
             <div key={index} className="border rounded-lg p-3">
-              <h4 className="font-medium mb-2" style={{ color: category.color }}>
+              <h4 className="font-medium mb-2" style={{ 
+                color: index === 2 ? '#f472b6' : index === 3 ? '#f97316' : category.color 
+              }}>
                 {category.name}
               </h4>
               <ul className="text-sm space-y-1">

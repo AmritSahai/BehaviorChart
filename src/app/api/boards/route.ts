@@ -41,6 +41,9 @@ export async function POST(request: Request) {
   }
 
   const { title, sessionName, categories } = await request.json()
+  
+  // Provide a default session name if not provided
+  const sessionNameToUse = sessionName || title || 'Untitled Session'
 
   // Create board
   const { data: board, error: boardError } = await supabase
@@ -68,7 +71,7 @@ export async function POST(request: Request) {
     .from('board_sessions')
     .insert({
       board_id: board.id,
-      session_name: sessionName
+      session_name: sessionNameToUse
     })
     .select()
     .single()

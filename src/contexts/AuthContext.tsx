@@ -8,7 +8,8 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signIn: () => Promise<void>
+  signInWithPhone: (phone: string) => Promise<void>
+  verifyOTP: (phone: string, otp: string) => Promise<void>
   signOut: () => Promise<void>
   isAuthenticated: boolean
 }
@@ -43,13 +44,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+  const signInWithPhone = async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: phone
     })
     
     if (error) {
       console.error('Sign in error:', error)
+      throw error
+    }
+  }
+
+  const verifyOTP = async (phone: string, otp: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      phone: phone,
+      token: otp,
+      type: 'sms'
+    })
+    
+    if (error) {
+      console.error('OTP verification error:', error)
       throw error
     }
   }
@@ -67,7 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     loading,
-    signIn,
+    signInWithPhone,
+    verifyOTP,
     signOut,
     isAuthenticated: !!user
   }
